@@ -1,0 +1,4 @@
+# Logging configuration for the Kite library
+module = KITE
+module-str = Kite library
+source "subsys/logging/Kconfig.template.log_config"

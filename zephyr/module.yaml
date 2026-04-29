@@ -1,0 +1,5 @@
+# Module definition for the Kite library
+name: kite
+build:
+  cmake: .
+  kconfig: Kconfig
