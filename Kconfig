@@ -1,3 +1,11 @@
+# Kconfig file for the Kite library
+
+config KITE_BYTE_STREAM_DEFAULT_BUFFER_SIZE
+    int "Default buffer size for byte stream"
+    default 256
+    help
+      This option sets the default buffer size for byte stream operations in the Kite library. Adjust this value based on your application's memory constraints and performance requirements.
+
 # Logging configuration for the Kite library
 module = KITE
 module-str = Kite library
