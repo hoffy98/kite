@@ -1,0 +1,15 @@
+config KITE_BYTE_STREAM
+    bool "Enable byte stream support in the Kite library"
+    default n
+    help
+      This option enables byte stream support in the Kite library, allowing for efficient handling of binary data. If your application does not require byte stream functionality, you can disable this option to save memory and reduce code size.
+
+if KITE_BYTE_STREAM
+
+config KITE_BYTE_STREAM_DEFAULT_BUFFER_SIZE
+    int "Default buffer size for byte stream"
+    default 256
+    help
+      This option sets the default buffer size for byte stream operations in the Kite library. Adjust this value based on your application's memory constraints and performance requirements.
+
+endif # KITE_BYTE_STREAM

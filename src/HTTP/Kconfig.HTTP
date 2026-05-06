@@ -1,0 +1,16 @@
+config KITE_HTTP
+    bool "Enable HTTP support in the Kite library"
+    default n
+    depends on KITE_BYTE_STREAM && HTTP_SERVER
+    help
+      This option enables HTTP support in the Kite library, allowing for handling of HTTP requests and responses. If your application does not require HTTP functionality, you can disable this option to save memory and reduce code size.
+
+if KITE_HTTP
+
+# Logging
+module = KITE_HTTP
+module-str = Kite library HTTP support
+source "subsys/logging/Kconfig.template.log_config"
+
+
+endif # KITE_HTTP

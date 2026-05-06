@@ -1,12 +1,17 @@
-# Kconfig file for the Kite library
-
-config KITE_BYTE_STREAM_DEFAULT_BUFFER_SIZE
-    int "Default buffer size for byte stream"
-    default 256
+config KITE
+    bool "Enable the Kite library"
+    default n
     help
-      This option sets the default buffer size for byte stream operations in the Kite library. Adjust this value based on your application's memory constraints and performance requirements.
+      This option enables the Kite library, which provides a collection of utilities and features for embedded applications. If your application does not require the functionality provided by the Kite library, you can disable this option to save memory and reduce code size.
 
-# Logging configuration for the Kite library
+if KITE
+
+# Logging
 module = KITE
 module-str = Kite library
 source "subsys/logging/Kconfig.template.log_config"
+
+rsource "src/Kconfig.ByteStream"
+rsource "src/HTTP/Kconfig.HTTP"
+
+endif # KITE
