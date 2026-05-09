@@ -13,5 +13,7 @@ source "subsys/logging/Kconfig.template.log_config"
 
 rsource "src/Kconfig.ByteStream"
 rsource "src/HTTP/Kconfig.HTTP"
+rsource "src/MQTT/Kconfig.MQTT"
+rsource "src/Serial/Kconfig.Serial"
 
 endif # KITE

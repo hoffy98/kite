@@ -1,0 +1,31 @@
+config KITE_SERIAL
+    bool "Enable Serial support in the Kite library"
+    default n
+    depends on KITE_BYTE_STREAM && SERIAL
+    help
+      This option enables Serial support in the Kite library, allowing for handling of Serial communication. If your application does not require Serial functionality, you can disable this option to save memory and reduce code size.
+
+if KITE_SERIAL
+
+# Logging
+module = KITE_SERIAL
+module-str = Kite library Serial support
+source "subsys/logging/Kconfig.template.log_config"
+
+config KITE_SERIAL_UART_ASYNC_RX_BUF_SIZE
+    int "UART async RX buffer size in bytes (per buffer)"
+    depends on UART_ASYNC_API
+    default 256
+    help
+      Size of each of the two RX double-buffers used by UartAsync.
+
+config KITE_SERIAL_UART_ASYNC_TX_BUF_SIZE
+    int "UART async TX buffer size in bytes"
+    depends on UART_ASYNC_API
+    default 256
+    help
+      Size of the internal DRAM TX buffer used by UartAsync. Data is copied
+      into this buffer before being passed to uart_tx so that DMA can access it
+      regardless of where the caller's buffer resides (flash, stack, etc.).
+
+endif # KITE_SERIAL

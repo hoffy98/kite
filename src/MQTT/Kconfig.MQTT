@@ -1,0 +1,73 @@
+config KITE_MQTT
+    bool "Enable MQTT support in the Kite library"
+    default n
+    depends on KITE_BYTE_STREAM && MQTT_LIB
+    help
+      This option enables MQTT support in the Kite library, allowing for handling of MQTT messages. If your application does not require MQTT functionality, you can disable this option to save memory and reduce code size.
+
+if KITE_MQTT
+
+# Logging
+module = KITE_MQTT
+module-str = Kite library MQTT support
+source "subsys/logging/Kconfig.template.log_config"
+
+config KITE_MQTT_THREAD_STACK_SIZE
+    int "MQTT client thread stack size in bytes"
+    default 2048
+
+config KITE_MQTT_THREAD_PRIORITY
+    int "MQTT client thread priority"
+    default 5
+
+config KITE_MQTT_RX_BUFFER_SIZE
+    int "MQTT socket RX buffer size in bytes"
+    default 512
+
+config KITE_MQTT_TX_BUFFER_SIZE
+    int "MQTT socket TX buffer size in bytes"
+    default 512
+
+config KITE_MQTT_PAYLOAD_BUFFER_SIZE
+    int "Scratch buffer size for inbound publish payloads in bytes"
+    default 512
+    help
+      Payloads larger than this value are truncated before dispatch.
+
+config KITE_MQTT_MAX_SUBSCRIPTIONS
+    int "Maximum number of concurrent topic subscriptions"
+    default 8
+
+config KITE_MQTT_MAX_TOPIC_LEN
+    int "Maximum topic string length (excluding null terminator)"
+    default 128
+
+config KITE_MQTT_MAX_BROKER_HOST_LEN
+    int "Maximum broker hostname/IP string length (excluding null terminator)"
+    default 64
+
+config KITE_MQTT_MAX_CLIENT_ID_LEN
+    int "Maximum client ID string length (excluding null terminator)"
+    default 64
+
+config KITE_MQTT_MAX_CREDENTIAL_LEN
+    int "Maximum username/password string length (excluding null terminator)"
+    default 64
+
+config KITE_MQTT_CONNECT_TIMEOUT_MS
+    int "Timeout in ms to wait for a CONNACK after mqtt_connect()"
+    default 5000
+
+config KITE_MQTT_RECONNECT_DELAY_MS
+    int "Delay in ms between connection/reconnection attempts"
+    default 3000
+
+config KITE_MQTT_CONNECT_MAX_RETRIES
+    int "Maximum consecutive connection attempts before pausing"
+    default 5
+
+config KITE_MQTT_POLL_TIMEOUT_MS
+    int "Maximum time in ms to block in poll() waiting for broker data"
+    default 500
+
+endif # KITE_MQTT
