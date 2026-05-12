@@ -116,6 +116,21 @@ inline int Publish(const char* topic, const char* payload, mqtt_qos qos = MQTT_Q
     return Publish(topic, stream, qos);
 }
 
+/**
+ * @brief Publish raw byte data to a topic.
+ *
+ * @param topic   Null-terminated topic string.
+ * @param data    Pointer to the byte data to publish.
+ * @param len     Length of the byte data in bytes.
+ * @param qos     QoS level (default: MQTT_QOS_0_AT_MOST_ONCE).
+ * @return 0 on success, negative errno on failure (e.g. -ENOTCONN if not connected).
+ */
+inline int Publish(const char* topic, const uint8_t* data, size_t len, mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE)
+{
+    Kite::ByteStream stream(const_cast<uint8_t*>(data), len, len);
+    return Publish(topic, stream, qos);
+}
+
 // ---------------------------------------------------------------------------
 // Subscribe / Unsubscribe
 // ---------------------------------------------------------------------------
