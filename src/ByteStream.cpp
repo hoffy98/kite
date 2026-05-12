@@ -8,6 +8,8 @@
 
 #include <zephyr/logging/log.h>
 
+#include <cstdarg>
+#include <cstdio>
 #include <cstring>
 
 LOG_MODULE_REGISTER(kite, CONFIG_KITE_LOG_LEVEL);
@@ -387,6 +389,26 @@ int ByteStream::Write(double value)
     uint64_t raw;
     memcpy(&raw, &value, sizeof(raw));
     return Write(raw);
+}
+
+int ByteStream::WriteF(const char* fmt, ...)
+{
+    if (GetFreeSpace() == 0)
+        return -ENOSPC;
+
+    va_list args;
+    va_start(args, fmt);
+    int written = vsnprintf(reinterpret_cast<char*>(m_data + m_writePos), GetFreeSpace(), fmt, args);
+    va_end(args);
+
+    if (written < 0)
+        return -EINVAL;
+
+    if (static_cast<size_t>(written) >= GetFreeSpace())
+        return -ENOSPC;
+
+    m_writePos += static_cast<size_t>(written);
+    return 0;
 }
 
 // -------------------------------------------------------------------------

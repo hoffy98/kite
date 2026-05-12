@@ -6,6 +6,7 @@
  */
 #pragma once
 #include <cerrno>
+#include <cstdarg>
 #include <cstddef>
 #include <cstdint>
 
@@ -337,6 +338,14 @@ class ByteStream
      * @return 0 on success, -ENOSPC if insufficient space.
      */
     int Write(double value);
+
+    /**
+     * @brief Formats a string using printf-style formatting and writes the result into the stream.
+     * @param fmt  printf-compatible format string.
+     * @param ...  Variadic arguments matching the format string.
+     * @return 0 on success, -ENOSPC if insufficient free space for the formatted output.
+     */
+    int WriteF(const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 
     /**
      * @brief Writes any trivially copyable POD type using memcpy semantics (no endian conversion).
