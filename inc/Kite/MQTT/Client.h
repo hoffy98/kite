@@ -56,6 +56,42 @@ int SetClientId(const char* clientId);
  */
 int SetCredentials(const char* username, const char* password);
 
+/**
+ * @brief Set the MQTT last will and testament (LWT) message.
+ *        Must be called before Init(). The will is published by the broker
+ *        if the client disconnects unexpectedly.
+ *
+ * @param topic      Null-terminated will topic string.
+ * @param payload    Pointer to the will payload bytes.
+ * @param payloadLen Length of the will payload in bytes.
+ * @param qos        QoS level for the will message (default: MQTT_QOS_0_AT_MOST_ONCE).
+ * @param retain     If true, the broker retains the will message (default: false).
+ * @return 0 on success, negative errno on failure (e.g. -EINVAL, -ENOMEM).
+ */
+int SetLastWill(const char* topic,
+                const uint8_t* payload,
+                size_t payloadLen,
+                mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE,
+                bool retain  = false);
+
+/**
+ * @brief Set the MQTT last will and testament (LWT) from a null-terminated string.
+ *
+ * @param topic   Null-terminated will topic string.
+ * @param payload Null-terminated string payload.
+ * @param qos     QoS level for the will message (default: MQTT_QOS_0_AT_MOST_ONCE).
+ * @param retain  If true, the broker retains the will message (default: false).
+ * @return 0 on success, negative errno on failure.
+ */
+inline int SetLastWill(const char* topic,
+                       const char* payload,
+                       mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE,
+                       bool retain  = false)
+{
+    return SetLastWill(topic, reinterpret_cast<const uint8_t*>(payload),
+                       payload ? strlen(payload) : 0, qos, retain);
+}
+
 // ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
@@ -97,9 +133,13 @@ bool IsConnected();
  * @param topic   Null-terminated topic string.
  * @param payload Payload bytes to publish.
  * @param qos     QoS level (default: MQTT_QOS_0_AT_MOST_ONCE).
+ * @param retain  If true, the broker stores the message as a retained message (default: false).
  * @return 0 on success, negative errno on failure (e.g. -ENOTCONN if not connected).
  */
-int Publish(const char* topic, const Kite::ByteStream& payload, mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE);
+int Publish(const char* topic,
+            const Kite::ByteStream& payload,
+            mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE,
+            bool retain  = false);
 
 /**
  * @brief Publish a null-terminated string message to a topic.
@@ -107,13 +147,17 @@ int Publish(const char* topic, const Kite::ByteStream& payload, mqtt_qos qos = M
  * @param topic   Null-terminated topic string.
  * @param payload Null-terminated string payload.
  * @param qos     QoS level (default: MQTT_QOS_0_AT_MOST_ONCE).
+ * @param retain  If true, the broker stores the message as a retained message (default: false).
  * @return 0 on success, negative errno on failure (e.g. -ENOTCONN if not connected).
  */
-inline int Publish(const char* topic, const char* payload, mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE)
+inline int Publish(const char* topic,
+                   const char* payload,
+                   mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE,
+                   bool retain  = false)
 {
     Kite::ByteStream stream(reinterpret_cast<uint8_t*>(const_cast<char*>(payload)),
                             strlen(payload), strlen(payload));
-    return Publish(topic, stream, qos);
+    return Publish(topic, stream, qos, retain);
 }
 
 /**
@@ -123,12 +167,17 @@ inline int Publish(const char* topic, const char* payload, mqtt_qos qos = MQTT_Q
  * @param data    Pointer to the byte data to publish.
  * @param len     Length of the byte data in bytes.
  * @param qos     QoS level (default: MQTT_QOS_0_AT_MOST_ONCE).
+ * @param retain  If true, the broker stores the message as a retained message (default: false).
  * @return 0 on success, negative errno on failure (e.g. -ENOTCONN if not connected).
  */
-inline int Publish(const char* topic, const uint8_t* data, size_t len, mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE)
+inline int Publish(const char* topic,
+                   const uint8_t* data,
+                   size_t len,
+                   mqtt_qos qos = MQTT_QOS_0_AT_MOST_ONCE,
+                   bool retain  = false)
 {
     Kite::ByteStream stream(const_cast<uint8_t*>(data), len, len);
-    return Publish(topic, stream, qos);
+    return Publish(topic, stream, qos, retain);
 }
 
 // ---------------------------------------------------------------------------

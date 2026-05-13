@@ -54,6 +54,13 @@ config KITE_MQTT_MAX_CREDENTIAL_LEN
     int "Maximum username/password string length (excluding null terminator)"
     default 64
 
+config KITE_MQTT_MAX_WILL_PAYLOAD_LEN
+    int "Maximum last will payload size in bytes"
+    default 256
+    help
+      Static buffer used to hold the last will payload. Will payloads
+      larger than this value are rejected by SetLastWill().
+
 config KITE_MQTT_CONNECT_TIMEOUT_MS
     int "Timeout in ms to wait for a CONNACK after mqtt_connect()"
     default 5000

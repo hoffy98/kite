@@ -5,7 +5,6 @@
  * @date 2026-05-07
  */
 #include <Kite/MQTT/Client.h>
-
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/net/socket.h>
@@ -41,6 +40,19 @@ static char s_clientId[CONFIG_KITE_MQTT_MAX_CLIENT_ID_LEN + 1];
 static char s_username[CONFIG_KITE_MQTT_MAX_CREDENTIAL_LEN + 1];
 static char s_password[CONFIG_KITE_MQTT_MAX_CREDENTIAL_LEN + 1];
 static bool s_hasCredentials;
+
+// -- Last Will --
+static char s_willTopic[CONFIG_KITE_MQTT_MAX_TOPIC_LEN + 1];
+static uint8_t s_willPayload[CONFIG_KITE_MQTT_MAX_WILL_PAYLOAD_LEN];
+static uint32_t s_willPayloadLen;
+static mqtt_qos s_willQos;
+static bool s_willRetain;
+static bool s_hasWill;
+
+// Persistent will structs handed to the MQTT library – must remain valid
+// for the lifetime of the connection.
+static struct mqtt_topic s_willTopicStruct;
+static struct mqtt_utf8 s_willMessageStruct;
 
 // -- Zephyr MQTT objects --
 static struct mqtt_client s_mqttClient;
@@ -397,6 +409,24 @@ static int ConnectToBroker()
     s_mqttClient.tx_buf_size      = sizeof(s_txBuf);
     s_mqttClient.transport.type   = MQTT_TRANSPORT_NON_SECURE;
 
+    if (s_hasWill)
+    {
+        s_willTopicStruct.topic.utf8 = reinterpret_cast<const uint8_t*>(s_willTopic);
+        s_willTopicStruct.topic.size = strlen(s_willTopic);
+        s_willTopicStruct.qos        = s_willQos;
+        s_willMessageStruct.utf8     = s_willPayload;
+        s_willMessageStruct.size     = s_willPayloadLen;
+        s_mqttClient.will_topic      = &s_willTopicStruct;
+        s_mqttClient.will_message    = &s_willMessageStruct;
+        s_mqttClient.will_retain     = s_willRetain ? 1 : 0;
+    }
+    else
+    {
+        s_mqttClient.will_topic   = nullptr;
+        s_mqttClient.will_message = nullptr;
+        s_mqttClient.will_retain  = 0;
+    }
+
     if (s_hasCredentials)
     {
         s_usernameUtf8 = { reinterpret_cast<const uint8_t*>(s_username), strlen(s_username) };
@@ -613,6 +643,44 @@ int SetCredentials(const char* username, const char* password)
     return 0;
 }
 
+int SetLastWill(const char* topic, const uint8_t* payload, size_t payloadLen, mqtt_qos qos, bool retain)
+{
+    if (topic == nullptr || topic[0] == '\0')
+    {
+        return -EINVAL;
+    }
+    if (strlen(topic) > CONFIG_KITE_MQTT_MAX_TOPIC_LEN)
+    {
+        LOG_ERR("Will topic too long (max %d chars)", CONFIG_KITE_MQTT_MAX_TOPIC_LEN);
+        return -EINVAL;
+    }
+    if (payload == nullptr && payloadLen > 0)
+    {
+        return -EINVAL;
+    }
+    if (payloadLen > CONFIG_KITE_MQTT_MAX_WILL_PAYLOAD_LEN)
+    {
+        LOG_ERR("Will payload too long (max %d bytes)", CONFIG_KITE_MQTT_MAX_WILL_PAYLOAD_LEN);
+        return -EINVAL;
+    }
+
+    strncpy(s_willTopic, topic, CONFIG_KITE_MQTT_MAX_TOPIC_LEN);
+    s_willTopic[CONFIG_KITE_MQTT_MAX_TOPIC_LEN] = '\0';
+
+    if (payload != nullptr && payloadLen > 0)
+    {
+        memcpy(s_willPayload, payload, payloadLen);
+    }
+    s_willPayloadLen = static_cast<uint32_t>(payloadLen);
+    s_willQos        = qos;
+    s_willRetain     = retain;
+    s_hasWill        = true;
+
+    LOG_DBG("Last will set: topic='%s' payload=%u B QoS=%d retain=%d",
+            s_willTopic, s_willPayloadLen, qos, retain ? 1 : 0);
+    return 0;
+}
+
 int Init()
 {
     if (s_running)
@@ -684,7 +752,7 @@ bool IsConnected()
     return s_connected;
 }
 
-int Publish(const char* topic, const Kite::ByteStream& payload, mqtt_qos qos)
+int Publish(const char* topic, const Kite::ByteStream& payload, mqtt_qos qos, bool retain)
 {
     if (topic == nullptr || topic[0] == '\0')
     {
@@ -705,7 +773,7 @@ int Publish(const char* topic, const Kite::ByteStream& payload, mqtt_qos qos)
     // QoS 0 does not use message IDs; an ID of 0 is fine for the library.
     param.message_id  = (qos != MQTT_QOS_0_AT_MOST_ONCE) ? NextMessageId() : 0;
     param.dup_flag    = 0;
-    param.retain_flag = 0;
+    param.retain_flag = retain ? 1 : 0;
 
     k_mutex_lock(&s_writeMutex, K_FOREVER);
     int rc = mqtt_publish(&s_mqttClient, &param);
